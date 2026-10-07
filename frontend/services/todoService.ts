@@ -1,43 +1,67 @@
 import { apiClient } from './api';
-import { ApiTodo, TodosApiResponse } from '@/types/api-todo';
+import { Todo } from '@/types/todo';
 
-export interface FetchTodosParams {
-  limit?: number;
-  skip?: number;
-}
-
-export interface CreateTodoInput {
+// Bentuk data todo dari backend Express (lihat TodoResponse di backend)
+interface TodoDto {
+  id: number;
   todo: string;
   completed: boolean;
-  userId: number;
 }
 
+interface ApiEnvelope<T = undefined> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface UpdateTodoInput {
+  task?: string;
+  is_completed?: boolean;
+}
+
+// Tabel todos tidak punya kolom created_at, jadi createdAt diisi tanggal saat data dimuat
+const toTodo = (dto: TodoDto): Todo => ({
+  id: dto.id,
+  title: dto.todo,
+  completed: dto.completed,
+  createdAt: new Date().toISOString().split('T')[0],
+});
+
 export const todoService = {
-  async fetchTodos(params: FetchTodosParams = { limit: 15, skip: 0 }): Promise<TodosApiResponse> {
-    const { limit = 15, skip = 0 } = params;
-    return apiClient<TodosApiResponse>(`/todos?limit=${limit}&skip=${skip}`);
+  // GET /api/todos — semua todo milik user yang sedang login
+  async getTodos(page = 1, perPage = 50): Promise<Todo[]> {
+    const res = await apiClient<ApiEnvelope<TodoDto[]>>(
+      `/todos?page=${page}&perPage=${perPage}`
+    );
+    return res.data.map(toTodo);
   },
 
-  async fetchTodoById(id: number | string): Promise<ApiTodo> {
-    return apiClient<ApiTodo>(`/todos/${id}`);
+  // GET /api/todos/:id
+  async getTodoById(id: number | string): Promise<Todo> {
+    const res = await apiClient<ApiEnvelope<TodoDto>>(`/todos/${id}`);
+    return toTodo(res.data);
   },
 
-  async createTodo(payload: CreateTodoInput): Promise<ApiTodo> {
-    return apiClient<ApiTodo>('/todos/add', {
+  // POST /api/todos
+  async createTodo(task: string): Promise<Todo> {
+    const res = await apiClient<ApiEnvelope<TodoDto>>('/todos', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ task }),
     });
+    return toTodo(res.data);
   },
 
-  async updateTodoStatus(id: number | string, completed: boolean): Promise<ApiTodo> {
-    return apiClient<ApiTodo>(`/todos/${id}`, {
+  // PUT /api/todos/:id — update parsial (task dan/atau is_completed)
+  async updateTodo(id: number | string, input: UpdateTodoInput): Promise<void> {
+    await apiClient<ApiEnvelope>(`/todos/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ completed }),
+      body: JSON.stringify(input),
     });
   },
 
-  async deleteTodo(id: number | string): Promise<{ id: number; isDeleted: boolean; deletedOn: string }> {
-    return apiClient<{ id: number; isDeleted: boolean; deletedOn: string }>(`/todos/${id}`, {
+  // DELETE /api/todos/:id
+  async deleteTodo(id: number | string): Promise<void> {
+    await apiClient<ApiEnvelope>(`/todos/${id}`, {
       method: 'DELETE',
     });
   },

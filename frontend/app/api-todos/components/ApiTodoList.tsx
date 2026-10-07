@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { TaskItem } from '@/types/api-todo';
-import { todoService } from '@/services/todoService';
+import { dummyTodoService } from '@/services/dummyTodoService';
 import { Badge } from '@/app/components/ui/badge';
 
 interface ApiTodoListProps {
@@ -18,9 +18,9 @@ export default function ApiTodoList({ initialTasks }: ApiTodoListProps) {
     // 1. Optimistic Update di State Lokal
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: targetStatus } : t)));
 
-    // 2. Simulasi update ke DummyJSON via todoService
+    // 2. Simulasi update ke DummyJSON via dummyTodoService
     try {
-      await todoService.updateTodoStatus(id, targetStatus);
+      await dummyTodoService.updateTodoStatus(id, targetStatus);
     } catch (err) {
       console.warn('Simulasi update ke API DummyJSON gagal (fallback state):', err);
     }

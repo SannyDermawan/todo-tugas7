@@ -1,4 +1,4 @@
-import { todoService, FetchTodosParams } from '@/services/todoService';
+import { dummyTodoService, FetchTodosParams } from '@/services/dummyTodoService';
 import { ApiTodo, TaskItem } from '@/types/api-todo';
 
 export function formatApiTodoToTask(raw: ApiTodo): TaskItem {
@@ -20,7 +20,7 @@ export async function getTasks(
   skip: number;
 }> {
   try {
-    const response = await todoService.fetchTodos(params);
+    const response = await dummyTodoService.fetchTodos(params);
     const tasks = response.todos.map(formatApiTodoToTask);
 
     return {
@@ -37,7 +37,7 @@ export async function getTasks(
 
 export async function getTaskById(id: number | string): Promise<TaskItem | null> {
   try {
-    const raw = await todoService.fetchTodoById(id);
+    const raw = await dummyTodoService.fetchTodoById(id);
     return formatApiTodoToTask(raw);
   } catch (error) {
     console.error(`[lib/tasks.ts] Error mengambil task ID ${id}:`, error);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTasks } from '@/lib/tasks';
-import { todoService } from '@/services/todoService';
+import { dummyTodoService } from '@/services/dummyTodoService';
 import { ApiResponse } from '@/types/api-todo';
 
 export async function GET(request: NextRequest) {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newTodo = await todoService.createTodo({
+    const newTodo = await dummyTodoService.createTodo({
       todo: body.todo,
       completed: Boolean(body.completed),
       userId: Number(body.userId) || 1,
